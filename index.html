@@ -302,57 +302,57 @@
   <script type="text/markdown" id="translation-rule-template">
 # Android Strings Translation Rules
 
-> Bộ rule chuẩn để dịch (localize) `strings.xml` trong dự án Android một cách **an toàn, idempotent và không gây lỗi build**.
+> A standard rule set for translating (localizing) `strings.xml` in an Android project in a way that is **safe, idempotent, and build-error-free**.
 
 ---
 
 ## 1. Input / Output
 
 ### Input
-| Thành phần | Mô tả |
+| Component | Description |
 |---|---|
-| **Base file** | `res/values/strings.xml` (ngôn ngữ gốc, thường là English) — đây là **single source of truth** |
-| **Locale folders** | Các thư mục đã tồn tại trong `res/`, ví dụ: `values-es-rES`, `values-fr-rFR`, `values-ja`, `values-vi`, ... |
+| **Base file** | `res/values/strings.xml` (the source language, usually English) — this is the **single source of truth** |
+| **Locale folders** | Folders that already exist under `res/`, e.g. `values-es-rES`, `values-fr-rFR`, `values-ja`, `values-vi`, ... |
 
 ### Output
-- Với **mỗi** thư mục `values-xx[-rYY]` đang tồn tại:
-  - Nếu chưa có `strings.xml` → **tạo mới**.
-  - Nếu đã có → **chỉ thêm các key còn thiếu** (không động vào key đã dịch).
+- For **each** existing `values-xx[-rYY]` folder:
+  - If `strings.xml` does not exist yet → **create it**.
+  - If it already exists → **only add the missing keys** (never touch already-translated keys).
 
 ---
 
 ## 2. Core Logic
 
-1. **Tự động phát hiện** tất cả locale folder trong `res/` — **KHÔNG** dùng danh sách hardcode.
-   - Quét theo pattern: `values-<lang>` hoặc `values-<lang>-r<REGION>`.
-2. Parse `res/values/strings.xml` làm tập key chuẩn (base keys).
-3. Với mỗi locale:
-   - Đọc `strings.xml` hiện có (nếu có) → lấy danh sách key đã dịch.
-   - Tính `missing = base_keys − existing_keys`.
-   - Chỉ dịch và ghi các key trong `missing`.
+1. **Automatically detect** every locale folder under `res/` — do **NOT** use a hardcoded list.
+   - Scan by pattern: `values-<lang>` or `values-<lang>-r<REGION>`.
+2. Parse `res/values/strings.xml` as the canonical key set (base keys).
+3. For each locale:
+   - Read the existing `strings.xml` (if any) → get the list of already-translated keys.
+   - Compute `missing = base_keys − existing_keys`.
+   - Only translate and write the keys in `missing`.
 
 ---
 
 ## 3. Translation Rules
 
-### 3.1. Bỏ qua key không dịch
-- **Skip** mọi `<string>` có `translatable="false"`.
+### 3.1. Skip non-translatable keys
+- **Skip** every `<string>` with `translatable="false"`.
 
-### 3.2. Không ghi đè bản dịch sẵn có
-- Nếu key đã tồn tại trong file locale → **giữ nguyên**.
+### 3.2. Never overwrite existing translations
+- If a key already exists in the locale file → **keep it as is**.
 
-### 3.3. Giữ nguyên placeholder & format
-Phải bảo toàn **chính xác** các thành phần sau:
+### 3.3. Preserve placeholders & formatting
+You must preserve the following **exactly**:
 
-| Loại | Ví dụ |
+| Type | Example |
 |---|---|
 | String/Digit format | `%s`, `%d`, `%f` |
 | Positional args | `%1$s`, `%2$d` |
-| Xuống dòng | `\n`, `\t` |
+| Line breaks | `\n`, `\t` |
 | HTML tags | `<b>`, `<i>`, `<u>`, `<a href="...">` |
 
-### 3.4. Escape ký tự bắt buộc (Android XML)
-| Ký tự gốc | Sau khi escape |
+### 3.4. Required escaping (Android XML)
+| Original character | After escaping |
 |---|---|
 | `'` (single quote) | `\'` |
 | `"` (double quote) | `\"` |
@@ -363,8 +363,8 @@ Phải bảo toàn **chính xác** các thành phần sau:
 
 ## 4. Output Format
 
-- XML hợp lệ cho Android (`<resources>` là root tag).
-- Encoding **UTF-8**, indentation nhất quán (4 spaces).
+- Valid Android XML (`<resources>` is the root tag).
+- **UTF-8** encoding, consistent indentation (4 spaces).
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -377,20 +377,20 @@ Phải bảo toàn **chính xác** các thành phần sau:
 
 ## 5. Idempotency
 
-- ✅ Key đã dịch → **không thay đổi** giữa các lần chạy.
-- ✅ Chỉ dịch các key **còn thiếu**.
-- ❌ Không re-translate, không sinh nội dung khác nhau giữa 2 lần chạy với cùng input.
+- ✅ Already-translated keys → **unchanged** between runs.
+- ✅ Only translate the **missing** keys.
+- ❌ Do not re-translate, do not produce different content across two runs with the same input.
 
 ---
 
-## 6. Checklist trước khi commit
+## 6. Pre-commit Checklist
 
-- [ ] Mọi locale có **đủ** key như base.
-- [ ] Không có key trùng trong từng file.
-- [ ] Placeholder `%1$s`, `%2$d`, `\n`, HTML giữ nguyên.
-- [ ] Đã escape `'`, `"`, `&`, `<`.
-- [ ] Bỏ qua `translatable="false"`.
-- [ ] Build pass, không cảnh báo "duplicate resources".
+- [ ] Every locale has the **full** key set like base.
+- [ ] No duplicate keys within each file.
+- [ ] Placeholders `%1$s`, `%2$d`, `\n`, and HTML are preserved.
+- [ ] Escaped `'`, `"`, `&`, `<`.
+- [ ] `translatable="false"` is skipped.
+- [ ] Build passes with no "duplicate resources" warnings.
   </script>
 
   <!-- ============== Libraries ============== -->
