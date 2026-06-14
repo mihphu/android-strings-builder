@@ -34,7 +34,7 @@ function buildPrompt(locales, source) {
     ? `\n## Source — res/values/strings.xml\n\`\`\`xml\n${source.trim()}\n\`\`\`\n`
     : '';
 
-  return `You are a senior Android localization specialist.
+  return `You are a senior Android localization specialist with 10+ years of experience.
 
 ${intro} Output one complete, valid \`strings.xml\` per locale.
 
@@ -50,9 +50,10 @@ Before translating, you MUST read @TRANSLATION_RULE.md and strictly follow every
 }
 
 /** ASCII tree of what the downloaded ZIP will contain. */
-function buildTree(locales) {
+function buildTree(locales, includeRule) {
   const lines = ['android-strings.zip'];
-  const entries = [{ label: 'TRANSLATION_RULE.md', child: null }];
+  const entries = [];
+  if (includeRule) entries.push({ label: 'TRANSLATION_RULE.md', child: null });
   locales.forEach((l) => entries.push({ label: `values-${l.id}/`, child: 'strings.xml' }));
   entries.forEach((e, i) => {
     const last = i === entries.length - 1;
@@ -62,64 +63,11 @@ function buildTree(locales) {
   return lines.join('\n');
 }
 
-// ----- Column resize -------------------------------------------
-
-const COL_DEFAULTS = { c1: 360, c3: 360 };
-const COL_MIN      = { c1: 220, c3: 200 };
-const COL_MAX      = { c1: 580, c3: 540 };
-let colWidths = { c1: 360, c3: 360 };
-
-function applyColWidths() {
-  const grid = document.getElementById('workspace-grid');
-  if (!grid) return;
-  grid.style.setProperty('--c1', colWidths.c1 + 'px');
-  grid.style.setProperty('--c3', colWidths.c3 + 'px');
-}
-
-function onHandleMouseDown(e) {
-  e.preventDefault();
-  const handle = e.currentTarget;
-  const col    = handle.dataset.col;           // 'c1' or 'c3'
-  const sign   = col === 'c1' ? 1 : -1;        // c1: drag right → wider; c3: drag right → narrower
-  const startX = e.clientX;
-  const startW = colWidths[col];
-
-  handle.classList.add('is-dragging');
-  document.body.style.cursor    = 'col-resize';
-  document.body.style.userSelect = 'none';
-
-  const onMove = (ev) => {
-    const newW = Math.round(
-      Math.max(COL_MIN[col], Math.min(COL_MAX[col], startW + sign * (ev.clientX - startX)))
-    );
-    colWidths[col] = newW;
-    applyColWidths();
-  };
-  const onUp = () => {
-    handle.classList.remove('is-dragging');
-    document.body.style.cursor    = '';
-    document.body.style.userSelect = '';
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup',   onUp);
-  };
-  document.addEventListener('mousemove', onMove);
-  document.addEventListener('mouseup',   onUp);
-}
-
-function initResizeHandles() {
-  document.querySelectorAll('.col-handle').forEach((handle) => {
-    handle.addEventListener('mousedown', onHandleMouseDown);
-    handle.addEventListener('dblclick', () => {
-      colWidths = { ...COL_DEFAULTS };
-      applyColWidths();
-    });
-  });
-}
-
 // ----- State ----------------------------------------------------
 
 const selected = new Set(); // selected locale ids
 let currentFilter = '';
+let chipsExpanded = false;
 const els = {};
 
 // ----- Rendering: language list --------------------------------
@@ -137,23 +85,14 @@ function matchLang(lang, q) {
 function rowHtml(lang) {
   const checked = selected.has(lang.id) ? 'checked' : '';
   const cc = lang.region.toLowerCase();
-  return `
-    <label class="lang-row flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2">
-      <input type="checkbox" value="${lang.id}" ${checked} />
-      <span class="checkbox">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-      </span>
-      <span class="lang-flag fi fi-${cc}"></span>
-      <span class="min-w-0 flex-1 truncate text-[15px] text-ink">${lang.name}</span>
-      <code class="whitespace-nowrap font-mono text-[12px] text-muted">values-${lang.id}</code>
-    </label>`;
+  return `<label class="lang-row"><input type="checkbox" value="${lang.id}" ${checked} /><span class="checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg></span><span class="lang-flag fi fi-${cc}"></span><span class="lang-name">${lang.name}</span><code class="lang-code">values-${lang.id}</code></label>`;
 }
 
 function renderLanguages() {
   const q = currentFilter.trim().toLowerCase();
   const rows = LANGUAGES.filter((l) => matchLang(l, q));
   els.list.innerHTML = rows.map(rowHtml).join('');
-  els.listEmpty.classList.toggle('hidden', rows.length > 0);
+  els.listEmpty.hidden = rows.length > 0;
 }
 
 function visibleLocales() {
@@ -183,19 +122,40 @@ function refreshFolders() {
 
   if (n === 0) {
     els.folderPreview.innerHTML = '';
-    els.folderEmpty.classList.remove('hidden');
+    els.folderEmpty.hidden = false;
+    chipsExpanded = false;
+    els.folderPreview.classList.remove('is-expanded');
+    els.chipsMore.hidden = true;
     return;
   }
-  els.folderEmpty.classList.add('hidden');
+  els.folderEmpty.hidden = true;
+  chipsExpanded = false;
+  els.folderPreview.classList.remove('is-expanded');
   els.folderPreview.innerHTML = locales
-    .map(
-      (l) => `
-      <span class="folder-chip inline-flex items-center gap-2 rounded-lg border border-hairline bg-canvas px-2.5 py-1.5">
-        <span class="lang-flag fi fi-${l.region.toLowerCase()}"></span>
-        <code class="font-mono text-[12.5px] text-body-strong">values-${l.id}</code>
-      </span>`
-    )
+    .map((l) => `<span class="folder-chip"><span class="lang-flag fi fi-${l.region.toLowerCase()}"></span><code>values-${l.id}</code></span>`)
     .join('');
+  requestAnimationFrame(syncChipsMore);
+}
+
+const CHEVRON = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+function syncChipsMore() {
+  const chips = [...els.folderPreview.querySelectorAll('.folder-chip')];
+  if (!chips.length) { els.chipsMore.hidden = true; return; }
+  if (chipsExpanded) {
+    els.chipsMore.innerHTML = `Show less ${CHEVRON}`;
+    els.chipsMore.classList.add('is-expanded');
+    els.chipsMore.hidden = false;
+    return;
+  }
+  const overflowCount = chips.filter(c => c.offsetTop > 0).length;
+  if (overflowCount > 0) {
+    els.chipsMore.innerHTML = `+${overflowCount} more ${CHEVRON}`;
+    els.chipsMore.classList.remove('is-expanded');
+    els.chipsMore.hidden = false;
+  } else {
+    els.chipsMore.hidden = true;
+  }
 }
 
 // ----- Prompt: built on demand via the Generate button --------
@@ -206,25 +166,25 @@ function generatePrompt() {
   const locales = selectedLocales();
   if (locales.length === 0) return;
   els.prompt.textContent = buildPrompt(locales, els.strings.value);
-  els.prompt.classList.remove('hidden');
-  els.promptEmpty.classList.add('hidden');
-  els.promptStale.classList.add('hidden');
+  els.prompt.hidden = false;
+  els.promptEmpty.hidden = true;
+  els.promptStale.hidden = true;
   els.copyBtn.disabled = false;
   promptBuilt = true;
 }
 
 function resetPrompt() {
   els.prompt.textContent = '';
-  els.prompt.classList.add('hidden');
-  els.promptEmpty.classList.remove('hidden');
-  els.promptStale.classList.add('hidden');
+  els.prompt.hidden = true;
+  els.promptEmpty.hidden = false;
+  els.promptStale.hidden = true;
   els.copyBtn.disabled = true;
   promptBuilt = false;
 }
 
 /** Flag a shown prompt as out of date when its inputs change. */
 function markPromptStale() {
-  if (promptBuilt) els.promptStale.classList.remove('hidden');
+  if (promptBuilt) els.promptStale.hidden = false;
 }
 
 function onSelectionChange() {
@@ -274,8 +234,10 @@ async function downloadZip() {
     locales.forEach((l) => {
       zip.file(`values-${l.id}/strings.xml`, stringsXml(l));
     });
-    const rules = els.rules.value.trim() ? els.rules.value : TRANSLATION_RULE_MD;
-    zip.file('TRANSLATION_RULE.md', rules);
+    if (els.includeRules.checked) {
+      const rules = els.rules.value.trim() ? els.rules.value : TRANSLATION_RULE_MD;
+      zip.file('TRANSLATION_RULE.md', rules);
+    }
 
     const blob = await zip.generateAsync({ type: 'blob' });
     saveAs(blob, 'android-strings.zip');
@@ -292,14 +254,15 @@ async function downloadZip() {
 function openPreview() {
   const locales = selectedLocales();
   if (locales.length === 0) return;
-  els.previewTree.textContent = buildTree(locales);
+  els.previewTree.textContent = buildTree(locales, els.includeRules.checked);
+  const ruleCount = els.includeRules.checked ? 1 : 0;
   els.previewCaption.textContent =
-    `${locales.length} locale folder(s) · ${locales.length + 1} files — each strings.xml is a blank <resources> template.`;
-  els.previewModal.style.display = 'flex';
+    `${locales.length} locale folder(s) · ${locales.length + ruleCount} file(s) — each strings.xml is a blank <resources> template.`;
+  els.previewModal.hidden = false;
 }
 
 function closePreview() {
-  els.previewModal.style.display = 'none';
+  els.previewModal.hidden = true;
 }
 
 // ----- Rules live preview (marked.js) -------------------------
@@ -339,9 +302,21 @@ function cacheEls() {
   els.rules = document.getElementById('rules-input');
   els.rulesReset = document.getElementById('rules-reset');
   els.rulesPreview = document.getElementById('rules-preview');
+  els.chipsMore = document.getElementById('chips-more');
+  els.includeRules = document.getElementById('include-rules');
+  els.downloadRuleBtn = document.getElementById('download-rule-btn');
 }
 
 function wireEvents() {
+  // prevent page scroll when clicking a language checkbox
+  els.list.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('label')) return;
+    const y = window.scrollY;
+    const lock = () => window.scrollTo(0, y);
+    window.addEventListener('scroll', lock, { once: true, capture: true });
+    setTimeout(() => window.removeEventListener('scroll', lock, { capture: true }), 200);
+  });
+
   // toggle a checkbox (event delegation survives re-renders)
   els.list.addEventListener('change', (e) => {
     const cb = e.target;
@@ -378,6 +353,20 @@ function wireEvents() {
   // live preview while editing
   els.rules.addEventListener('input', renderRulesPreview);
 
+  // download TRANSLATION_RULE.md only
+  els.downloadRuleBtn.addEventListener('click', () => {
+    const content = els.rules.value.trim() ? els.rules.value : TRANSLATION_RULE_MD;
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+    saveAs(blob, 'TRANSLATION_RULE.md');
+  });
+
+  // expand / collapse chips overflow
+  els.chipsMore.addEventListener('click', () => {
+    chipsExpanded = !chipsExpanded;
+    els.folderPreview.classList.toggle('is-expanded', chipsExpanded);
+    syncChipsMore();
+  });
+
   // reset the custom rules back to the default template
   els.rulesReset.addEventListener('click', () => {
     els.rules.value = TRANSLATION_RULE_MD;
@@ -404,7 +393,7 @@ function wireEvents() {
   els.previewClose.addEventListener('click', closePreview);
   els.previewBackdrop.addEventListener('click', closePreview);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && els.previewModal.style.display === 'flex') closePreview();
+    if (e.key === 'Escape' && !els.previewModal.hidden) closePreview();
   });
 }
 
@@ -421,7 +410,26 @@ async function loadDefaultRules() {
   return tpl ? tpl.textContent.trim() : '';
 }
 
+function initVersion() {
+  const v = window.APP_VERSION || '1.0.0';
+  document.querySelectorAll('#app-version, #footer-version').forEach(el => {
+    el.textContent = v;
+  });
+}
+
+function initTheme() {
+  const btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  initVersion();
+  initTheme();
   cacheEls();
   TRANSLATION_RULE_MD = await loadDefaultRules();
   els.rules.value = TRANSLATION_RULE_MD;
@@ -430,5 +438,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderLanguages();
   onSelectionChange();
   wireEvents();
-  initResizeHandles();
 });
