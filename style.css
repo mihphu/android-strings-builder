@@ -1016,6 +1016,26 @@ textarea::-webkit-scrollbar-thumb {
   background: var(--line-strong);
 }
 
+/* rules tab — editor textarea + markdown preview */
+.rules-textarea::-webkit-scrollbar,
+.rules-preview::-webkit-scrollbar { width: 8px; height: 8px; }
+.rules-textarea::-webkit-scrollbar-track,
+.rules-preview::-webkit-scrollbar-track { background: transparent; }
+.rules-textarea::-webkit-scrollbar-thumb,
+.rules-preview::-webkit-scrollbar-thumb {
+  border: 2px solid var(--surface);
+  border-radius: var(--r-pill);
+  background: rgba(61, 220, 132, 0.3);
+}
+.rules-textarea::-webkit-scrollbar-thumb:hover,
+.rules-preview::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 220, 132, 0.55);
+}
+.rules-textarea, .rules-preview {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(61, 220, 132, 0.3) transparent;
+}
+
 /* folder-chips scrollbar — thin, pill, coral accent */
 .folder-chips::-webkit-scrollbar { width: 4px; height: 4px; }
 .folder-chips::-webkit-scrollbar-track { background: transparent; border-radius: var(--r-pill); }
