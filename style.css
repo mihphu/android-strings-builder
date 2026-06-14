@@ -1,0 +1,303 @@
+/* =============================================================
+   Android Strings Builder — custom styles
+   Layout/spacing/colour come from Tailwind (CDN, configured in
+   index.html). This file holds what Tailwind can't: the warm
+   decorative depth, custom controls, scrollbars and motion.
+   Palette follows the Anthropic "cream + coral + dark" system.
+   ============================================================= */
+
+:root {
+  --canvas: #faf9f5;
+  --coral: #cc785c;
+  --coral-active: #a9583e;
+  --ink: #141413;
+  --hairline: #e6dfd8;
+}
+
+/* ---- Base ------------------------------------------------- */
+html { scroll-behavior: smooth; }
+body {
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Soft, on-palette background glow for depth (coral + teal, very low alpha) */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+}
+body::before {
+  width: 460px; height: 460px; top: -170px; right: -110px;
+  background: radial-gradient(circle at 30% 30%, rgba(204, 120, 92, 0.22), transparent 70%);
+}
+body::after {
+  width: 540px; height: 540px; bottom: -220px; left: -160px;
+  background: radial-gradient(circle at 50% 50%, rgba(93, 184, 166, 0.16), transparent 70%);
+}
+
+/* Cormorant Garamond approximates the Copernicus serif voice:
+   weight ~500-600 with slight negative tracking. */
+.font-serif { letter-spacing: -0.015em; }
+
+/* Frosted, on-cream sticky bar (the one tasteful "glass" surface). */
+.glass {
+  background: rgba(250, 249, 245, 0.72);
+  backdrop-filter: saturate(150%) blur(12px);
+  -webkit-backdrop-filter: saturate(150%) blur(12px);
+}
+
+/* Elevated panel on the cream canvas (one step lighter + soft lift). */
+.panel {
+  background: #fffdf8;
+  border: 1px solid #ece5da;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.04), 0 10px 30px -18px rgba(20, 20, 19, 0.20);
+}
+
+/* ---- Entrance motion -------------------------------------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rise   { animation: rise 0.6s cubic-bezier(0.21, 0.6, 0.35, 1) both; }
+.rise-1 { animation-delay: 0.04s; }
+.rise-2 { animation-delay: 0.12s; }
+.rise-3 { animation-delay: 0.20s; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rise, .folder-chip, .modal-card, #preview-backdrop { animation: none; }
+  * { transition: none !important; }
+}
+
+/* ---- Scrollbars ------------------------------------------- */
+.scroll-cream { scrollbar-width: thin; scrollbar-color: #ddd4c6 transparent; }
+.scroll-cream::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll-cream::-webkit-scrollbar-track { background: transparent; }
+.scroll-cream::-webkit-scrollbar-thumb {
+  background: #ddd4c6;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.scroll-cream::-webkit-scrollbar-thumb:hover {
+  background: #cbbfab;
+  background-clip: content-box;
+}
+
+.scroll-dark { scrollbar-width: thin; scrollbar-color: #3a3833 transparent; }
+.scroll-dark::-webkit-scrollbar { width: 10px; height: 10px; }
+.scroll-dark::-webkit-scrollbar-track { background: transparent; }
+.scroll-dark::-webkit-scrollbar-thumb {
+  background: #38362f;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.scroll-dark::-webkit-scrollbar-thumb:hover {
+  background: #4a473f;
+  background-clip: content-box;
+}
+
+/* ---- Flags (flag-icons) ----------------------------------- */
+.lang-flag.fi {
+  width: 26px;
+  height: 19.5px;          /* 4:3 */
+  border-radius: 3px;
+  background-size: cover;
+  box-shadow: inset 0 0 0 1px rgba(20, 20, 19, 0.12);
+  flex: none;
+}
+
+/* ---- Language rows + custom checkbox ---------------------- */
+.lang-row {
+  position: relative;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.lang-row:hover { background: #f5f0e8; transform: translateX(2px); }
+.lang-row:has(input:checked) { background: #f3ece1; }
+
+.lang-row input {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+  pointer-events: none;
+}
+.checkbox {
+  width: 20px; height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid #d8cfc0;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.checkbox svg {
+  width: 12px; height: 12px;
+  color: #fff;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.lang-row input:checked + .checkbox {
+  background: var(--coral);
+  border-color: var(--coral);
+}
+.lang-row input:checked + .checkbox svg { opacity: 1; transform: scale(1); }
+.lang-row input:focus-visible + .checkbox {
+  box-shadow: 0 0 0 3px rgba(204, 120, 92, 0.28);
+}
+
+/* ---- Inputs ----------------------------------------------- */
+.field {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--coral);
+  background: #fffdf8;
+  box-shadow: 0 0 0 3px rgba(204, 120, 92, 0.18);
+}
+
+/* ---- Buttons ---------------------------------------------- */
+.btn {
+  transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+.btn:active { transform: translateY(1px) scale(0.99); }
+
+.btn-coral:not(:disabled):hover {
+  background: var(--coral-active);
+  box-shadow: 0 10px 22px -10px rgba(204, 120, 92, 0.65);
+}
+.btn-coral:disabled {
+  background: #e6dfd8;
+  color: #8e8b82;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-ghost:not(:disabled):hover { background: #efe9de; }
+.btn-ghost:disabled { color: #8e8b82; opacity: 0.55; cursor: not-allowed; }
+.btn-dark:not(:disabled):hover { background: #312f2a; }
+.btn-dark:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Copy-success flash */
+.copied { background: #5db872 !important; color: #fff !important; }
+
+/* ---- Folder chips ----------------------------------------- */
+.folder-chip { animation: rise 0.3s ease both; }
+
+/* ---- Preview modal ---------------------------------------- */
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+#preview-backdrop { animation: fade 0.18s ease-out both; }
+.modal-card { animation: pop 0.18s ease-out both; }
+
+/* ---- Disclosure (custom rules) ---------------------------- */
+summary { list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+.chevron { transition: transform 0.2s ease; }
+details[open] .chevron { transform: rotate(180deg); }
+
+/* ---- Markdown preview (TRANSLATION_RULE.md editor) -------- */
+.md-preview { color: #3d3d3a; font-size: 13.5px; line-height: 1.7; }
+.md-preview > :first-child { margin-top: 0 !important; }
+.md-preview > :last-child  { margin-bottom: 0 !important; }
+
+.md-preview h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.45em; font-weight: 600; letter-spacing: -0.01em;
+  margin: 1.4em 0 0.5em; line-height: 1.2; color: #141413;
+}
+.md-preview h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2em; font-weight: 600;
+  margin: 1.4em 0 0.4em; padding-bottom: 0.3em;
+  border-bottom: 1px solid #e6dfd8; color: #141413;
+}
+.md-preview h3 {
+  font-size: 0.88em; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: #6c6a64;
+  margin: 1.1em 0 0.3em;
+}
+.md-preview p { margin: 0.55em 0; }
+.md-preview ul, .md-preview ol { padding-left: 1.6em; margin: 0.5em 0; }
+.md-preview li { margin: 0.2em 0; }
+.md-preview li input[type="checkbox"] { accent-color: var(--coral); margin-right: 0.4em; }
+
+.md-preview blockquote {
+  border-left: 3px solid var(--coral);
+  margin: 0.9em 0; padding: 0.45em 1em;
+  background: rgba(204,120,92,0.07); border-radius: 0 6px 6px 0;
+  color: #5a5852;
+}
+.md-preview blockquote p { margin: 0; }
+
+.md-preview code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em; background: #ede7db;
+  padding: 0.15em 0.45em; border-radius: 4px;
+}
+.md-preview pre {
+  background: #1f1e1b; border-radius: 8px;
+  padding: 0.9em 1em; margin: 0.8em 0;
+  overflow-x: auto;
+}
+.md-preview pre code { background: none; padding: 0; color: #e8e0d2; font-size: 0.82em; }
+
+.md-preview table {
+  width: 100%; border-collapse: collapse;
+  margin: 0.8em 0; font-size: 0.88em;
+  display: block; overflow-x: auto;
+}
+.md-preview th {
+  background: #f0e9de; font-weight: 600; text-align: left;
+  padding: 0.45em 0.75em; border: 1px solid #e6dfd8; white-space: nowrap;
+}
+.md-preview td {
+  padding: 0.4em 0.75em; border: 1px solid #e6dfd8; vertical-align: top;
+}
+.md-preview tr:nth-child(even) td { background: #faf6f0; }
+.md-preview hr { border: none; border-top: 1px solid #e6dfd8; margin: 1.2em 0; }
+.md-preview strong { font-weight: 600; color: #252523; }
+.md-preview a { color: var(--coral); text-decoration: underline; }
+
+/* ---- Column resize handles -------------------------------- */
+.col-handle {
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+.col-handle-grip {
+  width: 4px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #ddd4c6;
+  pointer-events: none;
+  transition: background 0.15s ease, height 0.15s ease;
+}
+.col-handle:hover .col-handle-grip { background: var(--coral); height: 44px; }
+.col-handle.is-dragging .col-handle-grip { background: var(--coral); height: 56px; }
+
+/* Grid template driven by CSS vars set by JS via --c1 / --c3 */
+@media (min-width: 1024px) {
+  #workspace-grid { grid-template-columns: var(--c1, 360px) 8px 1fr; }
+}
+@media (min-width: 1280px) {
+  #workspace-grid { grid-template-columns: var(--c1, 360px) 8px 1fr 8px var(--c3, 360px); }
+}

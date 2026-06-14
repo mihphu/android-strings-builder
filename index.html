@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Android Strings Builder — locale scaffolds &amp; AI translation prompt</title>
+  <meta name="description" content="Pick target locales, scaffold res/values folders into a ZIP, and generate a ready-to-paste AI translation prompt. Runs entirely in your browser." />
+
+  <!-- Fonts: Cormorant Garamond (serif display), Inter (body), JetBrains Mono (code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Accurate SVG country flags (renders on every OS, incl. Windows) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7/css/flag-icons.min.css" />
+
+  <!-- Tailwind (Play CDN) + design tokens from .skills/DESIGN-claude.md -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#faf9f5',
+            'surface-soft': '#f5f0e8',
+            'surface-card': '#efe9de',
+            'surface-strong': '#e8e0d2',
+            'surface-dark': '#181715',
+            'surface-dark-2': '#1f1e1b',
+            'surface-dark-3': '#252320',
+            ink: '#141413',
+            body: '#3d3d3a',
+            'body-strong': '#252523',
+            muted: '#6c6a64',
+            'muted-soft': '#8e8b82',
+            hairline: '#e6dfd8',
+            'hairline-soft': '#ebe6df',
+            coral: '#cc785c',
+            'coral-active': '#a9583e',
+            'on-dark': '#faf9f5',
+            'on-dark-soft': '#a09d96',
+            teal: '#5db8a6',
+            amber: '#e8a55a',
+            success: '#5db872',
+            error: '#c64545',
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="bg-canvas font-sans text-body">
+
+  <!-- ============== Top bar ============== -->
+  <header class="glass sticky top-0 z-30 border-b border-hairline">
+    <div class="flex h-16 items-center justify-between px-5 sm:px-8">
+      <div class="flex items-center gap-2.5">
+        <!-- decorative coral spike mark -->
+        <svg class="h-5 w-5 text-coral" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 1.5c.5 4 1.6 6.4 3.3 8.1S19.5 11.9 22.5 12c-3 .1-5.4 1.2-7.2 2.9s-2.8 4.1-3.3 8.1c-.5-4-1.6-6.4-3.3-8.1S4 12.1 1.5 12c3-.1 5.4-1.2 7.2-2.9S11.5 5.5 12 1.5Z" />
+        </svg>
+        <span class="font-serif text-[22px] font-semibold text-ink">Android Strings Builder</span>
+      </div>
+      <span class="hidden items-center gap-2 rounded-full border border-hairline bg-canvas/60 px-3 py-1 text-[12px] font-medium text-muted sm:inline-flex">
+        <span class="h-1.5 w-1.5 rounded-full bg-success"></span>
+        Runs entirely in your browser
+      </span>
+    </div>
+  </header>
+
+  <main class="px-5 pb-24 sm:px-8">
+
+    <!-- ============== Intro ============== -->
+    <section class="rise rise-1 mx-auto max-w-4xl pt-12 pb-8 sm:pt-16">
+      <span class="mb-4 inline-flex items-center gap-2 rounded-full bg-surface-card px-3 py-1 text-[12px] font-semibold uppercase tracking-[1.5px] text-ink">
+        Android i18n
+      </span>
+      <h1 class="max-w-3xl font-serif text-[40px] font-semibold leading-[1.08] tracking-tight text-ink sm:text-[52px]">
+        Scaffold locale folders &amp; a translation prompt — in seconds.
+      </h1>
+      <p class="mt-4 max-w-2xl text-[17px] leading-relaxed text-body">
+        Pick your target languages, drop in your source <code class="rounded bg-surface-card px-1.5 py-0.5 font-mono text-[13px] text-body-strong">strings.xml</code>, and get a ready-to-download ZIP of <code class="rounded bg-surface-card px-1.5 py-0.5 font-mono text-[13px] text-body-strong">res/values-*</code> folders plus a polished prompt for ChatGPT or Claude.
+      </p>
+    </section>
+
+    <!-- ============== Workspace ============== -->
+    <div id="workspace-grid" class="grid grid-cols-1 gap-y-5" style="--c1:360px;--c3:360px">
+
+      <!-- ---------- STEP 1 · Languages ---------- -->
+      <section class="rise rise-2 panel p-5 sm:p-6 lg:row-span-2 xl:row-span-1 lg:sticky lg:top-24 lg:self-start">
+        <div class="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div class="flex min-w-0 flex-1 items-center gap-3">
+            <span class="grid h-7 w-7 flex-none place-items-center rounded-full bg-coral text-[13px] font-semibold text-white">1</span>
+            <h2 class="font-serif text-[20px] font-semibold text-ink">Choose languages</h2>
+          </div>
+          <span id="count-pill" class="rounded-full bg-surface-card px-3 py-1 text-[12px] font-semibold text-ink">None selected</span>
+        </div>
+
+        <!-- search -->
+        <div class="relative">
+          <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+          </svg>
+          <input id="search" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="Search by name or code — “spanish”, “es”, “zh”…"
+                 class="field w-full rounded-lg border border-hairline bg-canvas py-2.5 pl-10 pr-3 text-[15px] text-ink placeholder:text-muted-soft" />
+        </div>
+
+        <!-- quick actions -->
+        <div class="mt-3 flex items-center gap-2 text-[13px]">
+          <button id="select-all" class="btn btn-ghost rounded-md px-2.5 py-1 font-medium text-ink">Select all</button>
+          <span class="text-hairline">·</span>
+          <button id="clear-all" class="btn btn-ghost rounded-md px-2.5 py-1 font-medium text-muted">Clear</button>
+        </div>
+
+        <!-- list -->
+        <div id="language-list" class="scroll-cream mt-3 max-h-[520px] space-y-0.5 overflow-y-auto pr-1"></div>
+        <p id="list-empty" class="hidden py-10 text-center text-[14px] text-muted">No languages match your search.</p>
+      </section>
+
+      <!-- Handle A: drag to resize Col 1 ←→ -->
+      <div class="col-handle hidden lg:flex lg:col-start-2 lg:row-span-2 xl:row-span-1" data-col="c1" title="Drag to resize · Double-click to reset">
+        <div class="col-handle-grip"></div>
+      </div>
+
+      <!-- ---------- Col 2: Source + Prompt ---------- -->
+      <div class="flex flex-col gap-5 lg:col-start-3 lg:h-full">
+
+        <!-- STEP 2 · Source strings -->
+        <section class="rise rise-2 panel p-5 sm:p-6">
+          <div class="mb-1 flex items-center gap-3">
+            <span class="grid h-7 w-7 place-items-center rounded-full bg-coral text-[13px] font-semibold text-white">2</span>
+            <h2 class="font-serif text-[22px] font-semibold text-ink">Paste your source strings</h2>
+          </div>
+          <p class="mb-3 pl-10 text-[14px] text-muted">Optional — paste your <code class="font-mono text-[13px]">res/values/strings.xml</code>. Leave empty and the prompt translates <strong class="font-semibold text-body-strong">every</strong> string in the project's default file.</p>
+          <textarea id="strings-input" rows="8" spellcheck="false"
+                    class="field scroll-cream w-full resize-y rounded-lg border border-hairline bg-canvas p-3.5 font-mono text-[13px] leading-relaxed text-ink placeholder:text-muted-soft"
+                    placeholder='&lt;resources&gt;&#10;    &lt;string name="app_name"&gt;My App&lt;/string&gt;&#10;    &lt;string name="greeting"&gt;Hello, %1$s!&lt;/string&gt;&#10;&lt;/resources&gt;'></textarea>
+        </section>
+
+        <!-- STEP 3 · Generate prompt -->
+        <section class="rise rise-3 panel p-5 sm:p-6 lg:flex lg:flex-1 lg:flex-col">
+          <div class="mb-1 flex items-center gap-3">
+            <span class="grid h-7 w-7 place-items-center rounded-full bg-coral text-[13px] font-semibold text-white">3</span>
+            <h2 class="font-serif text-[22px] font-semibold text-ink">Generate the prompt</h2>
+          </div>
+          <p class="mb-4 pl-10 text-[14px] text-muted">Built for your selected locales — paste it into ChatGPT, Claude, Cursor, or any agent.</p>
+
+          <button id="generate-btn" disabled
+                  class="btn btn-coral mb-4 flex w-full items-center justify-center gap-2.5 rounded-lg bg-coral px-5 py-3 text-[15px] font-semibold text-white shadow-[0_8px_20px_-10px_rgba(204,120,92,0.6)]">
+            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 3v4M3 5h4M6 17v4M4 19h4" /><path d="M13 3 15.5 9.5 22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5L13 3Z" />
+            </svg>
+            <span>Generate prompt</span>
+          </button>
+
+          <!-- Prompt (dark code surface) -->
+          <div class="overflow-hidden rounded-xl bg-surface-dark lg:flex lg:flex-1 lg:flex-col">
+            <div class="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
+              <div class="flex items-center gap-2 text-[12px] font-medium text-on-dark-soft">
+                <span class="h-2.5 w-2.5 rounded-full bg-coral/80"></span>
+                AI translation prompt
+              </div>
+              <button id="copy-btn" disabled
+                      class="btn btn-dark inline-flex items-center gap-1.5 rounded-md bg-surface-dark-3 px-3 py-1.5 text-[13px] font-medium text-on-dark">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+                <span id="copy-label">Copy</span>
+              </button>
+            </div>
+            <pre id="prompt-output" class="scroll-dark m-0 hidden overflow-auto whitespace-pre-wrap break-words px-4 py-4 font-mono text-[12.5px] leading-relaxed text-on-dark max-h-[60vh] lg:flex-1 lg:max-h-none"></pre>
+            <p id="prompt-empty" class="px-4 py-12 text-center font-sans text-[14px] text-on-dark-soft lg:flex-1">
+              Select languages, then click <span class="font-medium text-on-dark">Generate prompt</span>.
+            </p>
+          </div>
+          <p id="prompt-stale" class="mt-2.5 hidden">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber/20 px-2.5 py-1 text-[12px] font-medium text-[#8a5a12]">
+              <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><polyline points="21 3 21 8 16 8" /></svg>
+              Inputs changed — click Generate prompt to refresh.
+            </span>
+          </p>
+        </section>
+
+      </div>
+
+      <!-- Handle B: drag to resize Col 3 ←→ (xl only) -->
+      <div class="col-handle hidden xl:flex xl:col-start-4 xl:row-start-1" data-col="c3" title="Drag to resize · Double-click to reset">
+        <div class="col-handle-grip"></div>
+      </div>
+
+      <!-- ---------- Col 3 / Step 4 · Download ---------- -->
+      <section class="rise rise-3 panel p-5 sm:p-6 lg:col-start-3 lg:row-start-2 xl:col-start-5 xl:row-start-1">
+        <div class="mb-4 flex items-center gap-3">
+          <span class="grid h-7 w-7 place-items-center rounded-full bg-coral text-[13px] font-semibold text-white">4</span>
+          <h2 class="font-serif text-[18px] font-semibold text-ink">Download the folders</h2>
+        </div>
+
+        <!-- ZIP contents -->
+        <div class="mb-2.5 flex items-center justify-between gap-2">
+          <h3 class="text-[14px] font-semibold text-body-strong">
+            ZIP — <span id="folder-count" class="text-coral">0</span> folder(s)
+          </h3>
+          <span class="font-mono text-[12px] text-muted-soft">+ TRANSLATION_RULE.md</span>
+        </div>
+        <div id="folder-preview" class="flex flex-wrap gap-2"></div>
+        <p id="folder-empty" class="rounded-lg border border-dashed border-hairline px-4 py-6 text-center text-[14px] text-muted">
+          Selected locales will appear here as <code class="font-mono text-[13px]">values-…</code> folders.
+        </p>
+
+        <!-- Actions -->
+        <div class="mt-6 flex flex-col gap-3">
+          <button id="preview-btn" disabled
+                  class="btn btn-ghost flex w-full items-center justify-center gap-2 rounded-lg border border-hairline bg-canvas px-5 py-3.5 text-[15px] font-semibold text-ink">
+            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+            </svg>
+            <span>Preview structure</span>
+          </button>
+          <button id="download-btn" disabled
+                  class="btn btn-coral flex w-full items-center justify-center gap-2.5 rounded-lg bg-coral px-5 py-3.5 text-[15px] font-semibold text-white shadow-[0_8px_20px_-10px_rgba(204,120,92,0.6)]">
+            <svg class="h-[18px] w-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span id="download-label">Download ZIP</span>
+          </button>
+        </div>
+        <p class="mt-3 text-center text-[12px] text-muted-soft">
+          Each <code class="font-mono">values-*</code> folder holds a blank <code class="font-mono">strings.xml</code>.
+        </p>
+      </section>
+    </div>
+
+    <!-- ============== Customize TRANSLATION_RULE.md (full-width) ============== -->
+    <details class="rise rise-3 panel mt-5 p-5 sm:p-6">
+      <summary class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="grid h-7 w-7 flex-none place-items-center rounded-full bg-surface-card text-muted">
+            <svg class="h-[15px] w-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+            </svg>
+          </span>
+          <div>
+            <h2 class="font-serif text-[20px] font-semibold leading-tight text-ink">Customize <code class="font-mono text-[14px]">TRANSLATION_RULE.md</code></h2>
+            <p class="text-[13px] text-muted">Optional — edit your rules here; bundled into the ZIP. The prompt always tells the AI to read it.</p>
+          </div>
+        </div>
+        <svg class="chevron h-5 w-5 flex-none text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+      </summary>
+
+      <!-- Side-by-side: editor (left) | preview (right) -->
+      <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+        <!-- Markdown source editor -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5 text-[13px] font-semibold text-body-strong">
+              <svg class="h-3.5 w-3.5 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              Markdown source
+            </span>
+            <button id="rules-reset" class="btn btn-ghost rounded-md px-3 py-1.5 text-[13px] font-medium text-muted">Reset to default</button>
+          </div>
+          <textarea id="rules-input" spellcheck="false"
+                    class="field scroll-cream h-[440px] w-full resize-none rounded-lg border border-hairline bg-canvas p-3.5 font-mono text-[12.5px] leading-relaxed text-ink"></textarea>
+        </div>
+
+        <!-- Rendered preview -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="flex items-center gap-1.5 text-[13px] font-semibold text-body-strong">
+              <svg class="h-3.5 w-3.5 text-muted-soft" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
+              </svg>
+              Rendered preview
+            </span>
+            <span class="font-mono text-[12px] text-muted-soft">TRANSLATION_RULE.md</span>
+          </div>
+          <div id="rules-preview" class="md-preview scroll-cream h-[440px] overflow-auto rounded-lg border border-hairline bg-[#fffdf8] px-5 py-4"></div>
+        </div>
+
+      </div>
+    </details>
+
+    <footer class="mt-16 border-t border-hairline pt-6 text-center text-[13px] text-muted-soft">
+      Static, no backend · safe to open from <code class="font-mono">file://</code> or host on GitHub Pages.
+    </footer>
+  </main>
+
+  <!-- ============== Folder-structure preview modal ============== -->
+  <div id="preview-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="preview-backdrop" class="absolute inset-0 bg-ink/45 backdrop-blur-sm"></div>
+    <div id="preview-card" class="modal-card relative w-full max-w-lg overflow-hidden rounded-xl bg-surface-dark shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/5 px-5 py-3.5">
+        <div class="flex items-center gap-2 font-mono text-[13px] font-medium text-on-dark">
+          <svg class="h-4 w-4 text-coral" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />
+          </svg>
+          android-strings.zip
+        </div>
+        <button id="preview-close" aria-label="Close preview"
+                class="btn btn-dark grid h-7 w-7 place-items-center rounded-md bg-surface-dark-3 text-on-dark-soft">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <pre id="preview-tree" class="scroll-dark m-0 max-h-[60vh] overflow-auto px-5 py-4 font-mono text-[13px] leading-relaxed text-on-dark"></pre>
+      <p id="preview-caption" class="border-t border-white/5 px-5 py-3 text-[12px] text-on-dark-soft"></p>
+    </div>
+  </div>
+
+  <!-- ============== TRANSLATION_RULE.md content (raw — no JS escaping needed) ============== -->
+  <script type="text/markdown" id="translation-rule-template">
+# Android Strings Translation Rules
+
+> Bộ rule chuẩn để dịch (localize) `strings.xml` trong dự án Android một cách **an toàn, idempotent và không gây lỗi build**.
+
+---
+
+## 1. Input / Output
+
+### Input
+| Thành phần | Mô tả |
+|---|---|
+| **Base file** | `res/values/strings.xml` (ngôn ngữ gốc, thường là English) — đây là **single source of truth** |
+| **Locale folders** | Các thư mục đã tồn tại trong `res/`, ví dụ: `values-es-rES`, `values-fr-rFR`, `values-ja`, `values-vi`, ... |
+
+### Output
+- Với **mỗi** thư mục `values-xx[-rYY]` đang tồn tại:
+  - Nếu chưa có `strings.xml` → **tạo mới**.
+  - Nếu đã có → **chỉ thêm các key còn thiếu** (không động vào key đã dịch).
+
+---
+
+## 2. Core Logic
+
+1. **Tự động phát hiện** tất cả locale folder trong `res/` — **KHÔNG** dùng danh sách hardcode.
+   - Quét theo pattern: `values-<lang>` hoặc `values-<lang>-r<REGION>`.
+2. Parse `res/values/strings.xml` làm tập key chuẩn (base keys).
+3. Với mỗi locale:
+   - Đọc `strings.xml` hiện có (nếu có) → lấy danh sách key đã dịch.
+   - Tính `missing = base_keys − existing_keys`.
+   - Chỉ dịch và ghi các key trong `missing`.
+
+```
+base_keys ─┐
+           ├─► missing = base_keys − existing_keys ─► translate(missing) ─► merge & write
+locale ────┘
+```
+
+---
+
+## 3. Translation Rules
+
+### 3.1. Bỏ qua key không dịch
+- **Skip** mọi `<string>` có `translatable="false"`.
+- Không copy các key này sang file locale.
+
+```xml
+<!-- Bỏ qua, không dịch, không copy -->
+<string name="app_version" translatable="false">1.0.0</string>
+```
+
+### 3.2. Không ghi đè bản dịch sẵn có
+- Nếu key đã tồn tại trong file locale → **giữ nguyên**, tuyệt đối không overwrite.
+
+### 3.3. Giữ nguyên placeholder & format
+Phải bảo toàn **chính xác** các thành phần sau (không dịch, không đổi thứ tự index):
+
+| Loại | Ví dụ |
+|---|---|
+| String/Digit format | `%s`, `%d`, `%f` |
+| Positional args | `%1$s`, `%2$d` |
+| Xuống dòng | `\n`, `\t` |
+| HTML tags | `<b>`, `<i>`, `<u>`, `<a href="...">` |
+| CDATA | `<![CDATA[ ... ]]>` |
+
+> ⚠️ Với chuỗi có **nhiều** placeholder, BẮT BUỘC dùng dạng positional (`%1$s`, `%2$d`) — vì ngữ pháp các ngôn ngữ khác nhau có thể đảo thứ tự.
+
+### 3.4. Không dịch ký tự đặc biệt
+- Giữ nguyên: `%`, `$`, `@`, `#`.
+
+### 3.5. Escape ký tự bắt buộc (Android XML)
+| Ký tự gốc | Sau khi escape |
+|---|---|
+| `'` (single quote) | `\'` |
+| `"` (double quote) | `\"` |
+| `&` | `&amp;` |
+| `<` | `&lt;` |
+| `>` | `&gt;` |
+| `@` (đầu chuỗi) | `\@` |
+| `?` (đầu chuỗi) | `\?` |
+
+> Lưu ý: với chuỗi có dấu `'` mà **không** escape sẽ gây lỗi compile resource.
+
+### 3.6. Giữ nguyên key
+- **KHÔNG** đổi tên `name` của bất kỳ `<string>`/`<plurals>`/`<string-array>` nào.
+
+---
+
+## 4. Output Format
+
+- XML hợp lệ cho Android (`<resources>` là root tag).
+- Encoding **UTF-8**.
+- Indentation nhất quán (4 spaces khuyến nghị).
+- Có khai báo header:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_message">¡Bienvenido a la aplicación!</string>
+    <string name="greeting">Hola, %1$s. Tienes %2$d mensajes nuevos.</string>
+    <string name="cant_undo">Esta acción no se puede deshacer</string>
+</resources>
+```
+
+---
+
+## 5. Translation Quality
+
+- Dịch **tự nhiên, theo ngữ cảnh** — không dịch word-by-word.
+- Tone phù hợp **UI ứng dụng mobile**: ngắn gọn, thân thiện, đúng thuật ngữ nền tảng.
+- Tôn trọng quy ước ngôn ngữ đích (ví dụ: tiếng Đức thường dài hơn → cân nhắc UI).
+- Dùng đúng register: ngôi xưng hô (formal/informal) thống nhất trong toàn app.
+
+---
+
+## 6. Idempotency (QUAN TRỌNG)
+
+Script/process phải **chạy lại nhiều lần an toàn**:
+
+- ✅ Key đã dịch → **không thay đổi** giữa các lần chạy.
+- ✅ Chỉ dịch các key **còn thiếu**.
+- ✅ Output ổn định (thứ tự key nên bám theo base file để diff sạch).
+- ❌ Không re-translate, không sinh nội dung khác nhau giữa 2 lần chạy với cùng input.
+
+---
+
+## 7. Tránh trùng lặp Resource Name
+
+Mỗi `<string name="...">` phải **duy nhất** trong một `strings.xml`.
+
+| Tình huống | Xử lý |
+|---|---|
+| Key đã có trong base file | KHÔNG tạo lại key mới |
+| Update file locale | Chỉ **thêm key thiếu**, không redefine key đã có |
+| Phát hiện key trùng | Giữ entry đúng (khớp base), **xóa/merge** entry dư |
+| Đồng bộ tập key | Mọi locale phải có **cùng tập key** với base file |
+
+> Resource name trùng → **build error** hoặc **ghi đè giá trị bất ngờ lúc runtime**.
+
+**Mục tiêu:** đảm bảo ánh xạ **1-1** giữa key của tất cả locale và base file.
+
+---
+
+## 8. Pipeline khuyến nghị (pseudo-flow)
+
+```text
+1. parse base_strings = parse("res/values/strings.xml")
+2. base_keys = { name | translatable != false }
+3. locales   = detect_locale_dirs("res/")           # tự động
+4. for locale in locales:
+5.     existing = parse_if_exists(locale/strings.xml)
+6.     dedupe(existing)                              # gộp key trùng
+7.     missing  = base_keys − keys(existing)
+8.     translated = translate(missing, target=locale)  # natural, giữ placeholder
+9.     escape_xml(translated)                         # ', ", &, <, >
+10.    merged   = existing ∪ translated               # không overwrite
+11.    order_by(base_keys)                            # diff sạch
+12.    write_utf8(locale/strings.xml, merged)
+```
+
+---
+
+## 9. Checklist trước khi commit
+
+- [ ] Mọi locale có **đủ** key như base (1-1 mapping).
+- [ ] Không có key trùng trong từng file.
+- [ ] Không overwrite bản dịch cũ.
+- [ ] Placeholder `%1$s`, `%2$d`, `\n`, HTML giữ nguyên.
+- [ ] Đã escape `'`, `"`, `&`, `<`, `>`.
+- [ ] Bỏ qua `translatable="false"`.
+- [ ] File UTF-8, `<resources>` root, format nhất quán.
+- [ ] Build pass, không cảnh báo "duplicate resources".
+  </script>
+
+  <!-- ============== Libraries (CDN) ============== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- ============== App ============== -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
