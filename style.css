@@ -942,7 +942,8 @@ input:focus, textarea:focus {
   flex: 1;
 }
 .folder-chips.is-expanded {
-  max-height: 400px;
+  max-height: 84px; /* ~3 rows (24px chip + 4px gap) × 3 */
+  overflow-y: auto;
 }
 .chips-more {
   flex-shrink: 0;
@@ -1014,6 +1015,18 @@ textarea::-webkit-scrollbar-thumb {
   border-radius: var(--r-pill);
   background: var(--line-strong);
 }
+
+/* folder-chips scrollbar — thin, pill, coral accent */
+.folder-chips::-webkit-scrollbar { width: 4px; height: 4px; }
+.folder-chips::-webkit-scrollbar-track { background: transparent; border-radius: var(--r-pill); }
+.folder-chips::-webkit-scrollbar-thumb {
+  border-radius: var(--r-pill);
+  background: rgba(61, 220, 132, 0.35);
+}
+.folder-chips::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 220, 132, 0.6);
+}
+.folder-chips { scrollbar-width: thin; scrollbar-color: rgba(61,220,132,0.35) transparent; }
 
 /* ---- Modal ------------------------------------------------ */
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
