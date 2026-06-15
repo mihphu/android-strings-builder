@@ -64,7 +64,7 @@ const LANGUAGES = [
   { id: 'ml-rIN', code: 'ml',  region: 'IN', name: 'Malayalam',             flag: '🇮🇳' },
   { id: 'mr-rIN', code: 'mr',  region: 'IN', name: 'Marathi',               flag: '🇮🇳' },
   { id: 'ne-rNP', code: 'ne',  region: 'NP', name: 'Nepali',                flag: '🇳🇵' },
-  { id: 'nb-rNO', code: 'nb',  region: 'NO', name: 'Norwegian Bokmål',      flag: '🇳🇴' },
+  { id: 'no-rNO', code: 'no',  region: 'NO', name: 'Norwegian Bokmål',      flag: '🇳🇴' },
   { id: 'fa-rIR', code: 'fa',  region: 'IR', name: 'Persian',               flag: '🇮🇷' },
   { id: 'pl-rPL', code: 'pl',  region: 'PL', name: 'Polish',                flag: '🇵🇱' },
   { id: 'pt-rBR', code: 'pt',  region: 'BR', name: 'Portuguese (Brazil)',   flag: '🇧🇷' },
