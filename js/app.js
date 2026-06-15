@@ -67,6 +67,7 @@ function buildTree(locales, includeRule) {
 
 const selected = new Set(); // selected locale ids
 let currentFilter = '';
+let searchMode = 'locale'; // 'locale' (code/region/folder) | 'name'
 let chipsExpanded = false;
 const els = {};
 
@@ -74,12 +75,12 @@ const els = {};
 
 function matchLang(lang, q) {
   if (!q) return true;
-  return (
-    lang.name.toLowerCase().includes(q) ||
-    lang.code.includes(q) ||
-    lang.region.toLowerCase().includes(q) ||
-    `values-${lang.id}`.toLowerCase().includes(q)
-  );
+  if (searchMode === 'name') {
+    return lang.name.toLowerCase().includes(q);
+  }
+  // locale mode: match the locale code only (e.g. "es", "es-res"),
+  // without the "values-" folder prefix
+  return lang.id.toLowerCase().includes(q);
 }
 
 function rowHtml(lang) {
@@ -98,6 +99,28 @@ function renderLanguages() {
 function visibleLocales() {
   const q = currentFilter.trim().toLowerCase();
   return LANGUAGES.filter((l) => matchLang(l, q));
+}
+
+const SEARCH_HINTS = {
+  locale: 'Search code — "es", "zh", "pt-rBR"…',
+  name: 'Search name — "spanish", "chinese"…',
+};
+
+/** Update the placeholder hint; if it overflows, run a continuous right-to-left
+ *  marquee (enters from the right, exits past the left, then repeats). */
+function refreshHint() {
+  els.hintText.textContent = SEARCH_HINTS[searchMode];
+  requestAnimationFrame(() => {
+    const box = els.hint.clientWidth;
+    const text = els.hintText.scrollWidth;
+    const overflows = text > box + 1;
+    if (overflows) {
+      els.hint.style.setProperty('--start', `${box}px`);   // off the right edge
+      els.hint.style.setProperty('--end', `-${text}px`);   // fully past the left
+      els.hint.style.setProperty('--duration', `${((box + text) / 60).toFixed(1)}s`);
+    }
+    els.hint.classList.toggle('is-scrolling', overflows);
+  });
 }
 
 // ----- Rendering: outputs --------------------------------------
@@ -278,6 +301,9 @@ function cacheEls() {
   els.list = document.getElementById('language-list');
   els.listEmpty = document.getElementById('list-empty');
   els.search = document.getElementById('search');
+  els.searchMode = document.getElementById('search-mode');
+  els.hint = document.getElementById('search-hint');
+  els.hintText = els.hint.querySelector('.search-hint__text');
   els.selectAll = document.getElementById('select-all');
   els.clearAll = document.getElementById('clear-all');
   els.countPill = document.getElementById('count-pill');
@@ -331,6 +357,20 @@ function wireEvents() {
     currentFilter = e.target.value;
     renderLanguages();
   });
+
+  // switch search scope: locale code/region vs language name
+  els.searchMode.addEventListener('click', (e) => {
+    const btn = e.target.closest('.search-mode__btn');
+    if (!btn || btn.dataset.mode === searchMode) return;
+    searchMode = btn.dataset.mode;
+    [...els.searchMode.children].forEach((b) =>
+      b.classList.toggle('is-active', b === btn));
+    refreshHint();
+    renderLanguages();
+  });
+
+  // re-measure the scrolling hint when the layout width changes
+  window.addEventListener('resize', refreshHint);
 
   // select all currently-visible / clear all
   els.selectAll.addEventListener('click', () => {
@@ -438,4 +478,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderLanguages();
   onSelectionChange();
   wireEvents();
+  refreshHint();
 });

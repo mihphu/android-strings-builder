@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Android Strings Builder — locale scaffolds &amp; AI translation prompt</title>
+  <title>Android Strings Builder &amp; AI translation prompt</title>
   <meta name="description" content="Pick target locales, scaffold res/values folders into a ZIP, and generate a ready-to-paste AI translation prompt. Runs entirely in your browser." />
 
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233DDC84'%3E%3Cpath d='M12 1.5c.5 4 1.6 6.4 3.3 8.1S19.5 11.9 22.5 12c-3 .1-5.4 1.2-7.2 2.9s-2.8 4.1-3.3 8.1c-.5-4-1.6-6.4-3.3-8.1S4 12.1 1.5 12c3-.1 5.4-1.2 7.2-2.9S11.5 5.5 12 1.5Z'/%3E%3C/svg%3E" />
@@ -95,12 +95,19 @@
               <span class="field-sep">·</span>
               <button id="clear-all" class="field-action">Clear</button>
             </div>
-            <div class="search-wrap">
-              <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
-              </svg>
-              <input id="search" type="text" class="search-input" autocomplete="off" spellcheck="false"
-                     placeholder='Search — "spanish", "es", "zh"…' />
+            <div class="search-row">
+              <div class="search-wrap">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+                </svg>
+                <input id="search" type="text" class="search-input" autocomplete="off" spellcheck="false"
+                       aria-label="Search languages by locale or name" placeholder=" " />
+                <span id="search-hint" class="search-hint" aria-hidden="true"><span class="search-hint__text">Search code — "es", "zh", "pt-rBR"…</span></span>
+              </div>
+              <div id="search-mode" class="search-mode" role="group" aria-label="Search by">
+                <button type="button" class="search-mode__btn is-active" data-mode="locale">Locale</button>
+                <button type="button" class="search-mode__btn" data-mode="name">Name</button>
+              </div>
             </div>
             <div id="language-list" class="lang-list"></div>
             <p id="list-empty" class="lang-empty" hidden>No languages match your search.</p>

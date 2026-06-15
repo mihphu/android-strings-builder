@@ -520,7 +520,55 @@ button, input, textarea { font: inherit; }
 .field-sep { color: var(--line-strong); }
 
 /* ---- Search input ----------------------------------------- */
-.search-wrap { position: relative; }
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.search-wrap { position: relative; flex: 1; min-width: 0; }
+
+/* segmented Locale / Name toggle */
+.search-mode {
+  display: flex;
+  flex-shrink: 0;
+  width: 124px;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+.search-mode__btn {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--ink-mute);
+  font-family: var(--f-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.search-mode__btn:hover:not(.is-active) {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+.search-mode__btn.is-active {
+  background: var(--coral);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.search-mode__btn:focus-visible {
+  outline: 2px solid var(--coral);
+  outline-offset: 2px;
+}
 .search-wrap .search-icon {
   position: absolute;
   left: 11px;
@@ -531,6 +579,35 @@ button, input, textarea { font: inherit; }
   color: var(--ink-dim);
   pointer-events: none;
   flex-shrink: 0;
+}
+
+/* scrolling placeholder hint (native placeholder can't scroll) */
+.search-hint {
+  position: absolute;
+  left: 36px;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--ink-faint);
+  font-family: var(--f-mono);
+  font-size: 14px;
+}
+/* hide the hint as soon as the user types */
+.search-input:not(:placeholder-shown) ~ .search-hint { opacity: 0; }
+.search-hint__text { white-space: nowrap; will-change: transform; }
+.search-hint.is-scrolling .search-hint__text {
+  animation: hint-scroll var(--duration, 8s) linear infinite;
+}
+@keyframes hint-scroll {
+  from { transform: translateX(var(--start, 100%)); }
+  to   { transform: translateX(var(--end, -100%)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .search-hint.is-scrolling .search-hint__text { animation: none; }
 }
 
 input[type="text"],
