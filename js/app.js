@@ -36,14 +36,15 @@ function buildPrompt(locales, source) {
 
   return `You are a senior Android localization specialist with 10+ years of experience.
 
-${intro} Output one complete, valid \`strings.xml\` per locale.
+${intro} Write one complete, valid \`strings.xml\` per locale directly to disk.
 
 ## Target locales (${locales.length})
 ${list}
 
-## Output format
-For each locale, print its path as a heading (e.g. \`res/values-es-rES/strings.xml\`)
-followed by the full file in an \`\`\`xml code block.
+## How to deliver
+Translate directly into each locale's \`strings.xml\` at the path listed above; if that file
+(or its \`res/values-*/\` folder) does not exist yet, create it. Do NOT print the translated
+strings in your reply.
 ${sourceBlock}
 ## Required
 Before translating, you MUST read @TRANSLATION_RULE.md and strictly follow every rule it defines.`;
