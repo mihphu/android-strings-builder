@@ -28,8 +28,8 @@ function buildPrompt(locales, source) {
 
   const hasSource = source.trim().length > 0;
   const intro = hasSource
-    ? 'Translate the source Android `strings.xml` below into each target locale.'
-    : "Translate every string in this project's default `res/values/strings.xml` into each target locale.";
+    ? 'Help me translate the source Android `strings.xml` below into each target locale.'
+    : "Help me translate every string in this project's default `res/values/strings.xml` into each target locale.";
   const sourceBlock = hasSource
     ? `\n## Source — res/values/strings.xml\n\`\`\`xml\n${source.trim()}\n\`\`\`\n`
     : '';
